@@ -3,10 +3,10 @@ import { supabase } from '@/lib/supabase';
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { playerId: string } }
+  context: { params: Promise<{ playerId: string }> }
 ) {
   try {
-    const { playerId } = params;
+    const { playerId } = await context.params;
 
     // Delete snapshots first (foreign key constraint)
     const { error: snapshotsError } = await supabase
