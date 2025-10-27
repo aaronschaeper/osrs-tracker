@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: var(--font-geist-sans);
+  }
+}
+
+/* Subtle stone texture background */
+.stone-bg {
+  background-image: url('/textures/stone-bg.jpg');
+  background-size: 400px 400px;
+  background-repeat: repeat;
+  background-blend-mode: multiply;
+}
+
+/* Wood plank texture for borders */
+.wood-border {
+  position: relative;
+  border-width: 8px;
+  border-style: solid;
+  border-image: url('/textures/wood-plank.jpg') 8 repeat;
+}
+
+/* Alternative: Wood background */
+.wood-bg {
+  background-image: url('/textures/wood-plank.jpg');
+  background-size: 200px;
+  background-repeat: repeat;
+}
+
+/* Parchment texture */
+.parchment-bg {
+  background-image: url('/textures/parchment.jpg');
+  background-size: cover;
+  background-blend-mode: multiply;
+}
+
+/* Skill icon styling */
+.skill-icon {
+  width: 24px;
+  height: 24px;
+  image-rendering: pixelated;
+}
+
+.skill-icon-large {
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+}
