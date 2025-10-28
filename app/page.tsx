@@ -29,14 +29,14 @@ interface WeeklyGain {
   xp_gained: number;
 }
 
-const formatXP = (xp) => {
+const formatXP = (xp: number) => {
   if (!xp || xp === 0) return '0';
   if (xp >= 1000000) return `${(xp / 1000000).toFixed(1)}M`;
   if (xp >= 1000) return `${(xp / 1000).toFixed(0)}K`;
   return xp.toString();
 };
 
-const formatNumber = (num) => {
+const formatNumber = (num: number) => {
   if (!num || isNaN(num)) return '0';
   return new Intl.NumberFormat().format(num);
 };
