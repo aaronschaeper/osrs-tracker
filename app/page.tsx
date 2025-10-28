@@ -42,16 +42,16 @@ const formatNumber = (num: number) => {
 };
 
 export default function OSRSTracker() {
-  const [players, setPlayers] = useState([]);
-  const [weeklyGains, setWeeklyGains] = useState([]);
-  const [snapshots, setSnapshots] = useState([]);
-  const [competitions, setCompetitions] = useState([]);
-  const [newPlayerName, setNewPlayerName] = useState('');
-  const [isAddingPlayer, setIsAddingPlayer] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [selectedPlayer, setSelectedPlayer] = useState(null);
-  const [isCreatingCompetition, setIsCreatingCompetition] = useState(false);
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [weeklyGains, setWeeklyGains] = useState<WeeklyGain[]>([]);
+  const [snapshots, setSnapshots] = useState<any[]>([]);
+  const [competitions, setCompetitions] = useState<Competition[]>([]);
+  const [newPlayerName, setNewPlayerName] = useState<string>('');
+  const [isAddingPlayer, setIsAddingPlayer] = useState<boolean>(false);
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+  const [isCreatingCompetition, setIsCreatingCompetition] = useState<boolean>(false);
   const [newCompetition, setNewCompetition] = useState({
     name: '',
     description: '',
@@ -179,7 +179,7 @@ export default function OSRSTracker() {
     }
   };
 
-  const syncPlayer = async (username) => {
+  const syncPlayer = async (username: string) => {
     try {
       const response = await fetch('/api/players/sync', {
         method: 'POST',
@@ -199,7 +199,7 @@ export default function OSRSTracker() {
     }
   };
 
-  const deletePlayer = async (playerId, username) => {
+  const deletePlayer = async (playerId: string, username: string) => {
     if (!confirm(`Are you sure you want to delete ${username}? This will remove all their data and snapshots.`)) {
       return;
     }
@@ -222,7 +222,7 @@ export default function OSRSTracker() {
     }
   };
 
-  const viewPlayerDetails = async (player) => {
+  const viewPlayerDetails = async (player: Player) => {
     setSelectedPlayer(player);
   };
 
@@ -292,7 +292,7 @@ export default function OSRSTracker() {
   }
 
   return (
-    <div className="min-h-screen bg-[#1a1410] stone-bg text-[#e6d5b8]">
+    <div className="min-h-screen bg-[#1a1410] text-[#e6d5b8] stone-bg">
       <Navigation />
       
       <div className="p-6">
@@ -395,7 +395,7 @@ export default function OSRSTracker() {
                         borderRadius: '8px',
                         color: '#e6d5b8'
                       }}
-                      formatter={(value) => [formatXP(value), 'XP Gained']}
+                      formatter={(value) => [formatXP(Number(value)), 'XP Gained']}
                     />
                     <Bar dataKey="xp_gained" fill="#6ab86a" />
                   </BarChart>
