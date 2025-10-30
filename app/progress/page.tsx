@@ -2,9 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { TrendingUp, Activity, Award, Calendar } from 'lucide-react';
+import { TrendingUp, Activity, Award, Calendar, Plus } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import SkillIcon from '@/components/SkillIcon';
+import CreateGoalModal from '@/components/CreateGoalModal';
+import SkillGoals from '@/components/SkillGoals';
 
 interface Player {
   id: string;
@@ -45,6 +47,7 @@ export default function ProgressTracker() {
   const [period, setPeriod] = useState(30);
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showCreateGoal, setShowCreateGoal] = useState(false);
 
   useEffect(() => {
     loadPlayers();
@@ -103,6 +106,15 @@ export default function ProgressTracker() {
     } catch (error) {
       console.error('Error loading snapshots:', error);
       setSnapshots([]);
+    }
+  };
+
+  const handleGoalCreated = () => {
+    // Refresh goals by re-rendering
+    setShowCreateGoal(false);
+    // Optionally reload player data if needed
+    if (selectedPlayer) {
+      loadPlayerSnapshots(selectedPlayer);
     }
   };
 
@@ -175,6 +187,15 @@ export default function ProgressTracker() {
             </div>
 
             <div className="flex items-center gap-3">
+              {/* Create Goal Button */}
+              <button
+                onClick={() => setShowCreateGoal(true)}
+                className="flex items-center gap-2 bg-[#3a5f3a] hover:bg-[#4a7f4a] px-4 py-2 rounded-lg border-2 border-[#2a4a2a] transition-all"
+              >
+                <Plus size={18} />
+                Create Goal
+              </button>
+
               <div className="flex bg-[#2a2420] rounded-lg p-1 border-2 border-[#4a3a2a]">
                 <button
                   onClick={() => setViewMode('individual')}
@@ -288,6 +309,17 @@ export default function ProgressTracker() {
           </div>
         </div>
 
+        {/* Skill Goals Section */}
+        {viewMode === 'individual' && selectedPlayer && (
+          <div className="mb-8">
+            <SkillGoals 
+              playerId={selectedPlayer}
+              playerSkills={snapshots.length > 0 ? snapshots[snapshots.length - 1] : {}}
+              onGoalsChange={handleGoalCreated}
+            />
+          </div>
+        )}
+
         {/* Progress Chart */}
         <div className="bg-gradient-to-br from-[#2a2420] to-[#1f1a16] rounded-xl p-6 mb-8 border-2 border-[#4a3a2a] shadow-xl">
           <h2 className="text-xl font-semibold text-[#d4a76a] mb-6">XP Progress Over Time</h2>
@@ -365,6 +397,15 @@ export default function ProgressTracker() {
           )}
         </div>
       </div>
+
+      {/* Create Goal Modal */}
+      {showCreateGoal && (
+        <CreateGoalModal
+          players={players}
+          onClose={() => setShowCreateGoal(false)}
+          onGoalCreated={handleGoalCreated}
+        />
+      )}
     </div>
   );
 }

@@ -1,4 +1,3 @@
-// components/SkillIcon.tsx
 interface SkillIconProps {
   skill: string;
   size?: 'small' | 'medium' | 'large';
@@ -7,9 +6,9 @@ interface SkillIconProps {
 
 export default function SkillIcon({ skill, size = 'medium', className = '' }: SkillIconProps) {
   const sizeClasses = {
-    small: 'w-4 h-4',
-    medium: 'w-6 h-6',
-    large: 'w-8 h-8'
+    small: 'w-6 h-6',
+    medium: 'w-8 h-8',
+    large: 'w-10 h-10'
   };
 
   return (
