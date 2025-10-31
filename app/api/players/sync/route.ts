@@ -83,22 +83,28 @@ export async function POST(request: Request) {
 
     if (updateError) throw updateError;
 
-    // Create snapshot
+    // UPSERT snapshot (update if exists, insert if not)
+    // This allows multiple syncs per day to update the same snapshot
+    const today = new Date().toISOString().split('T')[0];
+    
     const { error: snapshotError } = await supabase
       .from('xp_snapshots')
-      .insert([
+      .upsert(
         {
           player_id: player.id,
-          snapshot_date: new Date().toISOString().split('T')[0],
+          snapshot_date: today,
           total_xp: stats.total_xp,
           total_level: stats.total_level,
           ...stats,
         },
-      ]);
+        {
+          onConflict: 'player_id,snapshot_date', // Update on conflict
+        }
+      );
 
     if (snapshotError) {
       console.error('Snapshot error:', snapshotError);
-      // Don't fail the whole request if snapshot fails
+      throw snapshotError; // Now we throw instead of silently failing
     }
 
     return NextResponse.json({
