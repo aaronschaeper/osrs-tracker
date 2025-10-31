@@ -36,9 +36,18 @@ export default function SkillGoals({ playerId, playerSkills, onGoalsChange }: Sk
     }
   };
 
+  // Reload goals when playerId changes
   useEffect(() => {
     loadGoals();
   }, [playerId]);
+
+  // IMPORTANT: Re-render when playerSkills changes (after sync)
+  useEffect(() => {
+    // This forces a re-render when player skills update
+    if (Object.keys(playerSkills).length > 0) {
+      setLoading(false);
+    }
+  }, [playerSkills]);
 
   const deleteGoal = async (goalId: string) => {
     if (!confirm('Delete this goal?')) return;
@@ -106,6 +115,7 @@ export default function SkillGoals({ playerId, playerSkills, onGoalsChange }: Sk
                 <button
                   onClick={() => deleteGoal(goal.id)}
                   className="text-[#b86a6a] hover:text-[#d88a8a] transition-colors"
+                  title="Delete goal"
                 >
                   <Trash2 size={18} />
                 </button>
