@@ -110,9 +110,7 @@ export default function ProgressTracker() {
   };
 
   const handleGoalCreated = () => {
-    // Refresh goals by re-rendering
     setShowCreateGoal(false);
-    // Optionally reload player data if needed
     if (selectedPlayer) {
       loadPlayerSnapshots(selectedPlayer);
     }
@@ -179,27 +177,30 @@ export default function ProgressTracker() {
       
       {/* Header */}
       <div className="bg-gradient-to-b from-[#2a2420] to-[#1f1a16] border-b-2 border-[#4a3a2a]">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+          <div className="flex flex-col gap-4">
+            {/* Title */}
             <div>
-              <h1 className="text-3xl font-bold text-[#d4a76a] mb-1">Progress Tracker</h1>
-              <p className="text-[#b8a890]">Track XP and level gains over time</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-[#d4a76a] mb-1">Progress Tracker</h1>
+              <p className="text-sm sm:text-base text-[#b8a890]">Track XP and level gains over time</p>
             </div>
 
-            <div className="flex items-center gap-3">
-              {/* Create Goal Button */}
+            {/* Controls - Stack on mobile */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              {/* Create Goal Button - Full width on mobile */}
               <button
                 onClick={() => setShowCreateGoal(true)}
-                className="flex items-center gap-2 bg-[#3a5f3a] hover:bg-[#4a7f4a] px-4 py-2 rounded-lg border-2 border-[#2a4a2a] transition-all"
+                className="flex items-center justify-center gap-2 bg-[#3a5f3a] hover:bg-[#4a7f4a] px-4 py-2 rounded-lg border-2 border-[#2a4a2a] transition-all text-sm sm:text-base"
               >
                 <Plus size={18} />
-                Create Goal
+                <span>Create Goal</span>
               </button>
 
+              {/* View Mode Toggle */}
               <div className="flex bg-[#2a2420] rounded-lg p-1 border-2 border-[#4a3a2a]">
                 <button
                   onClick={() => setViewMode('individual')}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  className={`flex-1 px-3 sm:px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                     viewMode === 'individual'
                       ? 'bg-[#5a4a3a] text-[#e6d5b8]'
                       : 'text-[#b8a890] hover:text-[#e6d5b8]'
@@ -209,7 +210,7 @@ export default function ProgressTracker() {
                 </button>
                 <button
                   onClick={() => setViewMode('group')}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  className={`flex-1 px-3 sm:px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                     viewMode === 'group'
                       ? 'bg-[#5a4a3a] text-[#e6d5b8]'
                       : 'text-[#b8a890] hover:text-[#e6d5b8]'
@@ -219,6 +220,7 @@ export default function ProgressTracker() {
                 </button>
               </div>
 
+              {/* Period Dropdown */}
               <select
                 value={period}
                 onChange={(e) => setPeriod(Number(e.target.value))}
@@ -232,8 +234,9 @@ export default function ProgressTracker() {
             </div>
           </div>
 
+          {/* Player Tabs - Horizontal scroll on mobile */}
           {viewMode === 'individual' && (
-            <div className="mt-6 flex gap-2 overflow-x-auto pb-2">
+            <div className="mt-4 flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-thin">
               {players.map((player) => (
                 <button
                   key={player.id}
@@ -252,58 +255,58 @@ export default function ProgressTracker() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-[#3a5a5a] to-[#2a4a4a] rounded-xl p-6 border-2 border-[#4a6a6a] shadow-xl">
-            <div className="flex items-center justify-between mb-4">
-              <TrendingUp className="text-[#9ad5d5]" size={28} />
-              <span className="text-[#9ad5d5] text-sm font-medium">XP Gained</span>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        {/* Stats Overview - 2 cols on mobile, 4 on desktop */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+          <div className="bg-gradient-to-br from-[#3a5a5a] to-[#2a4a4a] rounded-xl p-4 sm:p-6 border-2 border-[#4a6a6a] shadow-xl">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <TrendingUp className="text-[#9ad5d5]" size={20} />
+              <span className="text-[#9ad5d5] text-xs sm:text-sm font-medium">XP Gained</span>
             </div>
-            <div className="text-3xl font-bold text-[#e6d5b8] mb-1">
+            <div className="text-xl sm:text-3xl font-bold text-[#e6d5b8] mb-1">
               {gains.xpGain < 0 ? '-' : ''}{formatXP(Math.abs(gains.xpGain))}
             </div>
-            <div className="text-[#9ad5d5] text-sm">
+            <div className="text-[#9ad5d5] text-xs sm:text-sm">
               In last {period} days
-              {gains.xpGain < 0 && <span className="ml-2 text-red-300">⚠️ Decreased</span>}
+              {gains.xpGain < 0 && <span className="ml-1 sm:ml-2 text-red-300">⚠️</span>}
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-[#3a5a3a] to-[#2a4a2a] rounded-xl p-6 border-2 border-[#4a6a4a] shadow-xl">
-            <div className="flex items-center justify-between mb-4">
-              <Award className="text-[#9ad59a]" size={28} />
-              <span className="text-[#9ad59a] text-sm font-medium">Levels</span>
+          <div className="bg-gradient-to-br from-[#3a5a3a] to-[#2a4a2a] rounded-xl p-4 sm:p-6 border-2 border-[#4a6a4a] shadow-xl">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <Award className="text-[#9ad59a]" size={20} />
+              <span className="text-[#9ad59a] text-xs sm:text-sm font-medium">Levels</span>
             </div>
-            <div className="text-3xl font-bold text-[#e6d5b8] mb-1">
+            <div className="text-xl sm:text-3xl font-bold text-[#e6d5b8] mb-1">
               {gains.levelGain > 0 ? '+' : ''}{gains.levelGain}
             </div>
-            <div className="text-[#9ad59a] text-sm">
+            <div className="text-[#9ad59a] text-xs sm:text-sm">
               Levels gained
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-[#5a3a5a] to-[#4a2a4a] rounded-xl p-6 border-2 border-[#6a4a6a] shadow-xl">
-            <div className="flex items-center justify-between mb-4">
-              <Activity className="text-[#c5a5c5]" size={28} />
-              <span className="text-[#c5a5c5] text-sm font-medium">Current XP</span>
+          <div className="bg-gradient-to-br from-[#5a3a5a] to-[#4a2a4a] rounded-xl p-4 sm:p-6 border-2 border-[#6a4a6a] shadow-xl">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <Activity className="text-[#c5a5c5]" size={20} />
+              <span className="text-[#c5a5c5] text-xs sm:text-sm font-medium">Current XP</span>
             </div>
-            <div className="text-2xl font-bold text-[#e6d5b8] mb-1">
+            <div className="text-xl sm:text-2xl font-bold text-[#e6d5b8] mb-1">
               {formatXP(currentPlayer?.total_xp || 0)}
             </div>
-            <div className="text-[#c5a5c5] text-sm">
+            <div className="text-[#c5a5c5] text-xs sm:text-sm">
               Total experience
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-[#5a4a3a] to-[#4a3a2a] rounded-xl p-6 border-2 border-[#6a5a4a] shadow-xl">
-            <div className="flex items-center justify-between mb-4">
-              <Calendar className="text-[#d4a76a]" size={28} />
-              <span className="text-[#d4a76a] text-sm font-medium">Total Level</span>
+          <div className="bg-gradient-to-br from-[#5a4a3a] to-[#4a3a2a] rounded-xl p-4 sm:p-6 border-2 border-[#6a5a4a] shadow-xl">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <Calendar className="text-[#d4a76a]" size={20} />
+              <span className="text-[#d4a76a] text-xs sm:text-sm font-medium">Total Level</span>
             </div>
-            <div className="text-3xl font-bold text-[#e6d5b8] mb-1">
+            <div className="text-xl sm:text-3xl font-bold text-[#e6d5b8] mb-1">
               {currentPlayer?.total_level || 0}
             </div>
-            <div className="text-[#d4a76a] text-sm">
+            <div className="text-[#d4a76a] text-xs sm:text-sm">
               Combined level
             </div>
           </div>
@@ -311,8 +314,9 @@ export default function ProgressTracker() {
 
         {/* Skill Goals Section */}
         {viewMode === 'individual' && selectedPlayer && (
-          <div className="mb-8">
+          <div className="mb-6 sm:mb-8">
             <SkillGoals 
+              key={`${selectedPlayer}-${snapshots.length}`}
               playerId={selectedPlayer}
               playerSkills={snapshots.length > 0 ? snapshots[snapshots.length - 1] : {}}
               onGoalsChange={handleGoalCreated}
@@ -320,10 +324,10 @@ export default function ProgressTracker() {
           </div>
         )}
 
-        {/* Progress Chart */}
-        <div className="bg-gradient-to-br from-[#2a2420] to-[#1f1a16] rounded-xl p-6 mb-8 border-2 border-[#4a3a2a] shadow-xl">
-          <h2 className="text-xl font-semibold text-[#d4a76a] mb-6">XP Progress Over Time</h2>
-          <div className="h-80">
+        {/* Progress Chart - Reduced height on mobile */}
+        <div className="bg-gradient-to-br from-[#2a2420] to-[#1f1a16] rounded-xl p-4 sm:p-6 mb-6 sm:mb-8 border-2 border-[#4a3a2a] shadow-xl">
+          <h2 className="text-lg sm:text-xl font-semibold text-[#d4a76a] mb-4 sm:mb-6">XP Progress Over Time</h2>
+          <div className="h-64 sm:h-80">
             {chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData}>
@@ -363,25 +367,25 @@ export default function ProgressTracker() {
         </div>
 
         {/* Top Skills Trained */}
-        <div className="bg-gradient-to-br from-[#2a2420] to-[#1f1a16] rounded-xl p-6 border-2 border-[#4a3a2a] shadow-xl">
-          <h2 className="text-xl font-semibold text-[#d4a76a] mb-6">Top Skills Trained</h2>
+        <div className="bg-gradient-to-br from-[#2a2420] to-[#1f1a16] rounded-xl p-4 sm:p-6 border-2 border-[#4a3a2a] shadow-xl">
+          <h2 className="text-lg sm:text-xl font-semibold text-[#d4a76a] mb-4 sm:mb-6">Top Skills Trained</h2>
           {skillGains.length > 0 ? (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {skillGains.map((skill) => (
-                <div key={skill.skill} className="flex items-center">
-                  <div className="w-40 text-[#b8a890] font-medium flex items-center gap-2">
+                <div key={skill.skill} className="flex items-center gap-2 sm:gap-0">
+                  <div className="w-28 sm:w-40 text-[#b8a890] font-medium flex items-center gap-2 text-sm sm:text-base">
                     <SkillIcon skill={skill.skill.toLowerCase()} size="small" />
-                    {skill.skill}
+                    <span className="truncate">{skill.skill}</span>
                   </div>
                   <div className="flex-1">
-                    <div className="h-8 bg-[#1a1410] rounded-lg overflow-hidden border border-[#4a3a2a]">
+                    <div className="h-6 sm:h-8 bg-[#1a1410] rounded-lg overflow-hidden border border-[#4a3a2a]">
                       <div
-                        className="h-full bg-gradient-to-r from-[#6ab86a] to-[#4a9a4a] flex items-center px-3"
+                        className="h-full bg-gradient-to-r from-[#6ab86a] to-[#4a9a4a] flex items-center px-2 sm:px-3"
                         style={{
                           width: `${(skill.xpGain / skillGains[0].xpGain) * 100}%`
                         }}
                       >
-                        <span className="text-[#e6d5b8] text-sm font-medium">
+                        <span className="text-[#e6d5b8] text-xs sm:text-sm font-medium">
                           {formatXP(skill.xpGain)}
                         </span>
                       </div>
@@ -391,7 +395,7 @@ export default function ProgressTracker() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-[#b8a890]">
+            <div className="text-center py-8 text-[#b8a890] text-sm sm:text-base">
               No skill gains data available for this period
             </div>
           )}
