@@ -84,6 +84,10 @@ export default function CreateGoalModal({ players, onClose, onGoalCreated }: Cre
         return;
       }
 
+      // Import getXPForLevel to get the XP at the start of the current level
+      const { getXPForLevel } = await import('@/lib/osrsData');
+      const startingXPforLevel = getXPForLevel(currentLevel);
+
       // Create goal with starting level and XP stored
       const { supabase } = await import('@/lib/supabase');
       const { error: insertError } = await supabase
@@ -92,8 +96,8 @@ export default function CreateGoalModal({ players, onClose, onGoalCreated }: Cre
           player_id: selectedPlayer,
           skill: selectedSkill.charAt(0).toUpperCase() + selectedSkill.slice(1), // Capitalize first letter
           target_level: targetLevel,
-          starting_level: currentLevel,  // Store starting level
-          starting_xp: currentXP,        // Store starting XP
+          starting_level: currentLevel,      // Store current level
+          starting_xp: startingXPforLevel,   // Store XP at START of current level (not current XP)
           created_at: new Date().toISOString()
         });
 
