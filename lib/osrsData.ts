@@ -35,22 +35,25 @@ export function getXPToGoal(currentXP: number, goalLevel: number): number {
   return Math.max(0, goalXP - currentXP);
 }
 
-// Calculate progress percentage from START of current level
-export function getProgressToGoal(currentXP: number, goalLevel: number): number {
-  const currentLevel = getLevelFromXP(currentXP);
-  const startXP = getXPForLevel(currentLevel); // Start of current level
+// Calculate progress percentage
+// FIXED: Now uses stored starting_level and starting_xp from when goal was created
+export function getProgressToGoal(
+  currentXP: number, 
+  goalLevel: number,
+  startingLevel: number,  // NEW: Pass in the level when goal was created
+  startingXP?: number     // NEW: Optionally pass in exact starting XP
+): number {
   const goalXP = getXPForLevel(goalLevel);
   
-  if (currentXP >= goalXP) return 100;
-  if (currentLevel >= goalLevel) return 100;
+  // Use provided starting XP, or calculate from starting level
+  const startXP = startingXP ?? getXPForLevel(startingLevel);
   
-  const progress = ((currentXP - startXP) / (goalXP - startXP)) * 100;
-  return Math.min(100, Math.max(0, progress));
+  // Progress = (current - start) / (goal - start) * 100
+  const totalXPNeeded = goalXP - startXP;
+  const xpGained = currentXP - startXP;
+  
+  if (totalXPNeeded <= 0) return 100;
+  
+  const progress = (xpGained / totalXPNeeded) * 100;
+  return Math.max(0, Math.min(100, progress)); // Clamp between 0-100%
 }
-
-export const SKILLS = [
-  'attack', 'strength', 'defence', 'hitpoints', 'ranged', 'prayer', 'magic',
-  'cooking', 'woodcutting', 'fletching', 'fishing', 'firemaking', 'crafting',
-  'smithing', 'mining', 'herblore', 'agility', 'thieving', 'slayer', 
-  'farming', 'runecraft', 'hunter', 'construction'
-];

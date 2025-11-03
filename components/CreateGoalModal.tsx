@@ -30,6 +30,7 @@ export default function CreateGoalModal({ players, onClose, onGoalCreated }: Cre
   const [selectedSkill, setSelectedSkill] = useState('');
   const [targetLevel, setTargetLevel] = useState<number | null>(null);
   const [creating, setCreating] = useState(false);
+  const [error, setError] = useState('');
   const [playerSkills, setPlayerSkills] = useState<{ [key: string]: number }>({});
 
   useEffect(() => {
@@ -62,27 +63,47 @@ export default function CreateGoalModal({ players, onClose, onGoalCreated }: Cre
     return getLevelFromXP(xp);
   };
 
+  const getCurrentXP = (skill: string): number => {
+    return playerSkills[`${skill}_xp`] || 0;
+  };
+
   const handleCreateGoal = async () => {
     if (!selectedPlayer || !selectedSkill || !targetLevel) return;
 
     setCreating(true);
-    try {
-      const response = await fetch('/api/goals', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          player_id: selectedPlayer,
-          skill_name: selectedSkill,
-          target_level: targetLevel
-        })
-      });
+    setError('');
 
-      if (response.ok) {
-        onGoalCreated();
-        onClose();
+    try {
+      const currentLevel = getCurrentLevel(selectedSkill);
+      const currentXP = getCurrentXP(selectedSkill);
+
+      // Validate target level
+      if (targetLevel <= currentLevel) {
+        setError(`Target level must be higher than current level (${currentLevel})`);
+        setCreating(false);
+        return;
       }
+
+      // Create goal with starting level and XP stored
+      const { supabase } = await import('@/lib/supabase');
+      const { error: insertError } = await supabase
+        .from('skill_goals')
+        .insert({
+          player_id: selectedPlayer,
+          skill: selectedSkill.charAt(0).toUpperCase() + selectedSkill.slice(1), // Capitalize first letter
+          target_level: targetLevel,
+          starting_level: currentLevel,  // Store starting level
+          starting_xp: currentXP,        // Store starting XP
+          created_at: new Date().toISOString()
+        });
+
+      if (insertError) throw insertError;
+
+      onGoalCreated();
+      onClose();
     } catch (error) {
       console.error('Error creating goal:', error);
+      setError('Failed to create goal');
     } finally {
       setCreating(false);
     }
@@ -107,6 +128,12 @@ export default function CreateGoalModal({ players, onClose, onGoalCreated }: Cre
           </button>
         </div>
 
+        {error && (
+          <div className="mb-4 p-3 bg-red-900/50 border border-red-500 rounded-lg text-red-200">
+            {error}
+          </div>
+        )}
+
         {/* Step 1: Select Player */}
         <div className="mb-6">
           <h3 className="text-lg font-semibold text-[#e6d5b8] mb-3">1. Select Player</h3>
@@ -118,6 +145,7 @@ export default function CreateGoalModal({ players, onClose, onGoalCreated }: Cre
                   setSelectedPlayer(player.id);
                   setSelectedSkill('');
                   setTargetLevel(null);
+                  setError('');
                 }}
                 className={`p-4 rounded-lg border-2 transition-all ${
                   selectedPlayer === player.id
@@ -148,6 +176,7 @@ export default function CreateGoalModal({ players, onClose, onGoalCreated }: Cre
                       if (!isMaxed) {
                         setSelectedSkill(skill);
                         setTargetLevel(null);
+                        setError('');
                       }
                     }}
                     disabled={isMaxed}
@@ -155,17 +184,19 @@ export default function CreateGoalModal({ players, onClose, onGoalCreated }: Cre
                       selectedSkill === skill
                         ? 'bg-[#5a4a3a] border-[#d4a76a]'
                         : isMaxed
-                        ? 'bg-[#1a1410] border-[#3a2a2a] opacity-50 cursor-not-allowed'
-                        : 'bg-[#1a1410] border-[#4a3a2a] hover:border-[#5a4a3a]'
+                        ? 'bg-[#1a1410] border-[#4a3a2a] opacity-50 cursor-not-allowed'
+                        : 'bg-[#1a1410] border-[#4a3a2a] hover:bg-[#2a2420] hover:border-[#5a4a3a]'
                     }`}
                   >
-                    <SkillIcon skill={skill} size="medium" className="mx-auto" />
-                    
-                    {/* Tooltip */}
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-[#1a1410] border border-[#4a3a2a] rounded px-2 py-1 whitespace-nowrap z-10">
-                      <p className="text-[#e6d5b8] text-xs capitalize">{skill}</p>
-                      <p className="text-[#b8a890] text-xs">Level {level}</p>
+                    <SkillIcon skill={skill} size="medium" />
+                    <div className="absolute bottom-1 right-1 bg-[#1a1410] px-1 rounded text-xs text-[#b8a890]">
+                      {level}
                     </div>
+                    {isMaxed && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
+                        <span className="text-[#d4a76a] font-bold">99</span>
+                      </div>
+                    )}
                   </button>
                 );
               })}
@@ -177,18 +208,18 @@ export default function CreateGoalModal({ players, onClose, onGoalCreated }: Cre
         {selectedSkill && (
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-[#e6d5b8] mb-3">
-              3. Select Target Level
+              3. Select Target Level (Current: {currentLevel})
             </h3>
-            <p className="text-[#b8a890] text-sm mb-3">
-              Current {selectedSkill.charAt(0).toUpperCase() + selectedSkill.slice(1)} level: {currentLevel}
-            </p>
             <select
               value={targetLevel || ''}
-              onChange={(e) => setTargetLevel(Number(e.target.value))}
+              onChange={(e) => {
+                setTargetLevel(Number(e.target.value));
+                setError('');
+              }}
               className="w-full bg-[#1a1410] border-2 border-[#4a3a2a] rounded-lg px-4 py-3 text-[#e6d5b8]"
             >
               <option value="">Select target level...</option>
-              {levelOptions.map(level => (
+              {levelOptions.map((level) => (
                 <option key={level} value={level}>
                   Level {level}
                 </option>
@@ -198,25 +229,17 @@ export default function CreateGoalModal({ players, onClose, onGoalCreated }: Cre
         )}
 
         {/* Create Button */}
-        <div className="flex gap-3">
-          <button
-            onClick={handleCreateGoal}
-            disabled={!selectedPlayer || !selectedSkill || !targetLevel || creating}
-            className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-all ${
-              !selectedPlayer || !selectedSkill || !targetLevel || creating
-                ? 'bg-[#4a4440] text-[#8a7a6a] cursor-not-allowed'
-                : 'bg-[#3a5f3a] hover:bg-[#4a7f4a] text-[#e6d5b8]'
-            }`}
-          >
-            {creating ? 'Creating...' : 'Create Goal'}
-          </button>
-          <button
-            onClick={onClose}
-            className="px-6 py-3 bg-[#5a4a3a] hover:bg-[#6a5a4a] text-[#e6d5b8] rounded-lg font-semibold transition-all"
-          >
-            Cancel
-          </button>
-        </div>
+        <button
+          onClick={handleCreateGoal}
+          disabled={!selectedPlayer || !selectedSkill || !targetLevel || creating}
+          className={`w-full py-3 rounded-lg font-semibold transition-all ${
+            selectedPlayer && selectedSkill && targetLevel && !creating
+              ? 'bg-[#3a5f3a] hover:bg-[#4a7f4a] text-[#e6d5b8] border-2 border-[#2a4a2a]'
+              : 'bg-[#1a1410] text-[#5a4a3a] border-2 border-[#3a2a2a] cursor-not-allowed'
+          }`}
+        >
+          {creating ? 'Creating...' : 'Create Goal'}
+        </button>
       </div>
     </div>
   );

@@ -1,15 +1,18 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { getLevelFromXP, getXPForLevel, getProgressToGoal } from '@/lib/osrsData';
+import { getLevelFromXP, getProgressToGoal, getXPToGoal } from '@/lib/osrsData';
 import SkillIcon from '@/components/SkillIcon';
 import { Trash2 } from 'lucide-react';
 
 interface SkillGoal {
   id: string;
   player_id: string;
-  skill_name: string;
+  skill: string;  // This is the correct column name
   target_level: number;
+  starting_level: number;
+  starting_xp: number;
+  created_at: string;
 }
 
 interface SkillGoalsProps {
@@ -24,11 +27,16 @@ export default function SkillGoals({ playerId, playerSkills, onGoalsChange }: Sk
 
   const loadGoals = async () => {
     try {
-      const response = await fetch(`/api/goals?player_id=${playerId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setGoals(data);
-      }
+      const { supabase } = await import('@/lib/supabase');
+      const { data, error } = await supabase
+        .from('skill_goals')
+        .select('*')
+        .eq('player_id', playerId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      setGoals(data || []);
     } catch (error) {
       console.error('Error loading goals:', error);
     } finally {
@@ -41,10 +49,10 @@ export default function SkillGoals({ playerId, playerSkills, onGoalsChange }: Sk
     loadGoals();
   }, [playerId]);
 
-  // IMPORTANT: Re-render when playerSkills changes (after sync)
+  // Re-render when playerSkills changes (after sync)
   useEffect(() => {
-    // This forces a re-render when player skills update
     if (Object.keys(playerSkills).length > 0) {
+      // Force re-render with updated skills
       setLoading(false);
     }
   }, [playerSkills]);
@@ -53,14 +61,17 @@ export default function SkillGoals({ playerId, playerSkills, onGoalsChange }: Sk
     if (!confirm('Delete this goal?')) return;
 
     try {
-      const response = await fetch(`/api/goals?id=${goalId}`, {
-        method: 'DELETE'
-      });
+      const { supabase } = await import('@/lib/supabase');
+      const { error } = await supabase
+        .from('skill_goals')
+        .delete()
+        .eq('id', goalId);
 
-      if (response.ok) {
-        await loadGoals();
-        onGoalsChange?.();
-      }
+      if (error) throw error;
+
+      // Reload goals after deletion
+      loadGoals();
+      onGoalsChange?.();
     } catch (error) {
       console.error('Error deleting goal:', error);
     }
@@ -69,7 +80,7 @@ export default function SkillGoals({ playerId, playerSkills, onGoalsChange }: Sk
   if (loading) {
     return (
       <div className="bg-gradient-to-br from-[#2a2420] to-[#1f1a16] p-6 rounded-lg border-2 border-[#4a3a2a] shadow-xl">
-        <p className="text-[#b8a890]">Loading goals...</p>
+        <div className="text-center text-[#b8a890]">Loading goals...</div>
       </div>
     );
   }
@@ -79,7 +90,7 @@ export default function SkillGoals({ playerId, playerSkills, onGoalsChange }: Sk
       <div className="bg-gradient-to-br from-[#2a2420] to-[#1f1a16] p-6 rounded-lg border-2 border-[#4a3a2a] shadow-xl">
         <h3 className="text-xl font-semibold text-[#d4a76a] mb-2">Skill Goals</h3>
         <p className="text-[#b8a890] text-center py-4">
-          No active goals. Click "Create Goal" to set one!
+          No skill goals set yet. Click "Create Goal" to set one!
         </p>
       </div>
     );
@@ -91,10 +102,23 @@ export default function SkillGoals({ playerId, playerSkills, onGoalsChange }: Sk
       
       <div className="space-y-4">
         {goals.map(goal => {
-          const currentXP = playerSkills[`${goal.skill_name}_xp`] || 0;
+          // Handle both 'skill' and 'skill_name' for backwards compatibility
+          const skillName = goal.skill || (goal as any).skill_name;
+          if (!skillName) return null;
+          
+          const skillLower = skillName.toLowerCase();
+          const currentXP = playerSkills[`${skillLower}_xp`] || 0;
           const currentLevel = getLevelFromXP(currentXP);
-          const progress = getProgressToGoal(currentXP, goal.target_level);
-          const xpRemaining = getXPForLevel(goal.target_level) - currentXP;
+          
+          // Use stored starting values for accurate progress calculation
+          const progress = getProgressToGoal(
+            currentXP, 
+            goal.target_level,
+            goal.starting_level,
+            goal.starting_xp
+          );
+          
+          const xpRemaining = getXPToGoal(currentXP, goal.target_level);
           const levelsRemaining = goal.target_level - currentLevel;
 
           return (
@@ -102,10 +126,10 @@ export default function SkillGoals({ playerId, playerSkills, onGoalsChange }: Sk
               {/* Header */}
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <SkillIcon skill={goal.skill_name} size="medium" />
+                  <SkillIcon skill={skillLower} size="medium" />
                   <div>
                     <p className="text-[#e6d5b8] font-semibold capitalize">
-                      {goal.skill_name}
+                      {skillName}
                     </p>
                     <p className="text-[#b8a890] text-sm">
                       Level {currentLevel} → {goal.target_level}
