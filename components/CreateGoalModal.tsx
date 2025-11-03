@@ -97,13 +97,17 @@ export default function CreateGoalModal({ players, onClose, onGoalCreated }: Cre
           created_at: new Date().toISOString()
         });
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('Database insert error:', insertError);
+        throw insertError;
+      }
 
       onGoalCreated();
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating goal:', error);
-      setError('Failed to create goal');
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      setError(error?.message || 'Failed to create goal');
     } finally {
       setCreating(false);
     }
